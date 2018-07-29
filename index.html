@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<title>Weather</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkM0YeKZy0W3IuA1KNuCB77qjyRXdpKEk&callback=initMap&libraries=places" ></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+	<script>
+
+	// Gotta think about Promise
+	//https://www.google.ca/maps?=${latitude},${longitude}
+	/*
+    275fe9c4fc4ff237910e57a69691877e
+    http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=Seoul,South%20Korea
+	*/
+
+	function initMap() {
+
+		const city = $('#city')[0];
+
+		// eslint-disable-next-line 
+		const autocomplete = new google.maps.places.Autocomplete(city);
+
+		google.maps.event.addListener(autocomplete, 'place_changed', function() {
+
+			//const lat = get_place.geometry.location.lat();
+			//const lng = get_place.geometry.location.lng();
+
+
+			const location = autocomplete.getPlace().formatted_address.split(',');
+			const city = location[0];
+			const country = location[location.length -1];
+
+		
+		//	console.log(city, country);
+
+			const get_location = { city, country };
+			
+	//	     cities_countries.push(get_location);
+
+		});
+
+	}
+
+	$(document).ready(function () {
+
+		$('#address').submit(function(e) {
+    		
+			const address = $('#city')[0].value.split(' ');
+			const city = address[0].replace(',', '');
+			const country = address[address.length - 1];
+			const location = { city, country };
+
+			e.preventDefault();
+
+			const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${city},${country}`;
+		 
+			$.ajax({
+
+                type: "POST",
+                url,
+                dataType: "json",
+                success: function (result) {
+                    
+                	console.log(result.list[0].weather[0].icon);
+                	const temps = result.list.map(temp => temp.main.temp-273);
+					const times = result.list.map(time => time.dt_txt);                	
+					const rainfalls = result.list.map(rainfall => {
+
+						if(!rainfall.rain['3h']) {
+
+							rainfall.rain['3h'] = 0;
+
+						}
+						
+						return rainfall.rain['3h'];
+						
+					});
+
+					$('#city_province').html(`Weather in ${result.city.name}, ${result.city.country}`);
+					
+					$('#weather_summary').html(
+						`<p>
+
+							<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
+
+							${Math.round(result.list[0].main.temp - 273)} &#176C
+
+						</p>
+
+						<p>
+							${result.list[0].weather[0].description}
+						</p>
+						`
+					);
+
+					$('#weather_table').html(
+
+						`<table>
+							<tr>
+								<td>
+								
+								</td>
+								<td>
+									
+								</td>
+							</tr>
+
+						</table>`
+
+					)
+
+                	const ctx = document.querySelector('#myChart').getContext('2d');
+
+					var mixedChart = new Chart(ctx, {
+
+						type: 'bar',
+						data: {
+
+							labels: times,
+							datasets: [
+
+								{
+
+									label: `Rainfall ${city}`,
+									fill: true,
+									backgroundColor: 'rgba(255, 100, 200, 0.4)',
+									borderColor: 'rgb(255, 100, 255)',
+									data: rainfalls,
+									
+								},
+										{
+									label: `Temperature ${city}`,
+									fill: false,
+									ackgroundColor: 'rgba(255, 99, 132, 0.4)',
+									borderColor: 'rgb(255, 99, 132)',
+									data: temps,
+									type: 'line'
+
+								}
+							
+							]
+						
+						}
+
+					});
+
+                },
+                error: function () {
+  
+                    alert('Some error occurs!');
+  
+                }
+
+            });
+				
+
+		});	
+
+	});
+	
+</script>
+
+</head>
+<body>
+
+	<form id="address">
+		<input type="text" name="city" id="city" autofocus>
+		<input type="submit" name="submit" value="submit"> 
+	</form>
+
+	<div style="width:75%;">
+		<canvas id="myChart"></canvas>
+	</div>
+	<div>
+		<h3 id="city_province"></h3>
+		<p id="weather_summary"></p>
+	</div>
+	<div id="weather_table">
+	</div>
+	
+
+<div id="location" style="margin-top: 25px; height: 50px"></div>
+
+</body>
+</html>
