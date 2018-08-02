@@ -5,26 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta charset="UTF-8">
 	<title>Weather</title>
-<!-- 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
-
-	<link rel="stylesheet"href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"/>
-	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-<!-- <script src = "../js/index.js"></script> -->
 
 	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkM0YeKZy0W3IuA1KNuCB77qjyRXdpKEk&callback=initMap&libraries=places" ></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 
+	<link rel="stylesheet"href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"/>
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
 	<script>
-
-	// Gotta think about Promise
-	//https://www.google.ca/maps?=${latitude},${longitude}
-	/*
-    275fe9c4fc4ff237910e57a69691877e
-    http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=Seoul,South%20Korea
-	*/
-
-// cittty;
 
 	function initMap() {
 		
@@ -37,355 +26,221 @@
 		google.maps.event.addListener(autocomplete1, 'place_changed', ()=>{ console.log('working');});
 		google.maps.event.addListener(autocomplete2, 'place_changed', ()=>{ console.log('working');});
 		google.maps.event.addListener(autocomplete3, 'place_changed', ()=>{ console.log('working');});
-
-		// Only when callback necessary 
-
-		// const city = $('#city')[0];
-		// const city1 = $('#city1')[0];
-		// const city2 = $('#city2')[0];
-		// const city3 = $('#city3')[0];
-
-
-		// google.maps.event.addListener(autocomplete, 'place_changed', function() {
-
-		// 	const lat = get_place.geometry.location.lat();
-		// 	const lng = get_place.geometry.location.lng();
-		// 	const location = autocomplete.getPlace().formatted_address.split(',');
-
-		// 	const city = location[0];
-		// 	const country = location[location.length -1];
-
-		// 	const get_location = { city, country };
-			
-		// });
-
-		// google.maps.event.addListener(autocomplete1, 'place_changed', function() {
-
-		
-		// });
-		// google.maps.event.addListener(autocomplete2, 'place_changed', function() {
-
-		
-		// });
-
-		// google.maps.event.addListener(autocomplete3, 'place_changed', function() {
-
-		
-		// });
-
+	
 	}
-
 
 	$(document).ready(function() {
 
-		const setWeather = function (whoSubmit, submitValue) {
-    		
-			const cities = submitValue.map(city => {
+		const setWeather = function (whoSubmit, submitValue, valueLength) {
 
-				return city[0].replace(',', '');
-
-			});
-
-			const countries = submitValue.map(country => country[country.length - 1]); 
-
-			const city_provice = whoSubmit === 'address' ? $('#city_province1')
-				: $('#city_province2');
-
-			const weather_summary = whoSubmit === 'address' ? $('#weather_summary1')
-				: $('#weather_summary2');
-
-			const weather_table = whoSubmit === 'address' ? $('#weather_table1')
-				: $('#weather_table2'); 
+			if(submitValue.length === 0) return alert('You must enter city.');
 
 			const myChart = whoSubmit === 'address' ? 'myChart1' : 'myChart2'; 
 
-			//api.openweathermap.org/data/2.5/weather?q=London,uk
+			const weather_info = whoSubmit === 'address' ? 'weather_info1' : 'weather_info2';
 
+			const temperature = [];
 
+			var counter = 1;
+
+			if($('#weather_info1'))	$('#weather_info1').empty();
+			if($('#weather_info2'))	$('#weather_info2').empty();
 
 			submitValue.forEach(values => {
 
+				const cities = values[0]; //.replace(',', '');
 
+				const countries = values[values.length - 1];	
 
-
-				const cities = values[0].replace(',', '');
-
-								console.log(cities);
-
-
-				// const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${ cities },${ countries }`;
+				const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${ cities },${ countries }`;
 		 
+				$.ajax({
 
+	                type: "POST",
+	                url,
+	                dataType: "json",
+	                success: function (result) {
 
+	                	console.log(result)
+	                   
+	                	const temps = result.list.map(temp => temp.main.temp-273);
 
-			});
-			
+						const times = result.list.map(time => time.dt_txt);                	
 
-			const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${ cities },${ countries }`;
-		 
+						const rainfalls = result.list.map(rainfall => {						
 
-			$.ajax({
+						let iSRain;
 
-                type: "POST",
-                url,
-                dataType: "json",
-                success: function (result) {
-                    
-                	//console.log(result);
-                	const temps = result.list.map(temp => temp.main.temp-273);
-					const times = result.list.map(time => time.dt_txt);                	
-					const rainfalls = result.list.map(rainfall => {						
+							if(!rainfall.rain) {
 
-					//console.log('rainfall: ', rainfall);
-
-					let iSRain;
-
-						if(!rainfall.rain) {
-
-							iSRain = [];
-						
-						} else {
-
-
-							if(!rainfall.rain['3h']) {
-
-								rainfall.rain['3h'] = 0;
-								iSRain = rainfall.rain['3h']
-
+								iSRain = [];
+							
 							} else {
 
-								iSRain = rainfall.rain['3h'];
+								if(!rainfall.rain['3h']) {
 
-							}
+									rainfall.rain['3h'] = 0;
+									iSRain = rainfall.rain['3h']
 
-						} 
+								} else {
 
-						return iSRain;
-						
-					});
+									iSRain = rainfall.rain['3h'];
 
-					const ctx = document.querySelector(`#${ myChart }`).getContext('2d');
+								}
 
-					const temperature = [ 
+							} 
 
-						{
-
-							label: `Temperature ${ cities }`,
-							fill: false,
-							backgroundColor: 'rgba(255, 99, 132, 0.4)',
-							borderColor: 'rgb(255, 150, 255)',
-							data: temps								
-
-						}
-
-					];
-
-                	const chartElements = {
-
-						type: 'line',
-
-						data: {
-
-							labels: times,
-							datasets: temperature
-						
-						}
-
-					};
-
-					if(whoSubmit === "address") {
-
-						chartElements.type = 'bar';
-						
-						chartElements.data.datasets.unshift({
-
-							label: `Rainfall ${ cities }`,
-							fill: true,
-							backgroundColor: 'rgba(255, 100, 200, 0.4)',
-							borderColor: 'rgb(255, 100, 255)',
-							data: rainfalls
-									
+							return iSRain;
+							
 						});
 
-						chartElements.data.datasets[1].type = 'line';
+						temperature.push({
 
-					}
+								label: `Temperature ${ cities }`,
+								fill: false,
+								backgroundColor: 'rgba(255, 99, 132, 0.4)',
+								borderColor: 'rgb(255, 150, 255)',
+								data: temps								
 
-                	const mixedChart = new Chart(ctx, chartElements);
+						});
 
-					city_provice.html(`Weather in ${result.city.name}, ${result.city.country}`);
-					
-					weather_summary.html(
+						const chartElements = {
 
-						`<p>
+							type: 'line',
 
-							<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
+							data: {
 
-							${Math.round(result.list[0].main.temp - 273)} &#176C
+								labels: times,
+								datasets: temperature
+							
+							}
 
-						</p>
+						};
 
-						<p>
-							${result.list[0].weather[0].description}
-						</p>
-						`
-					);
+						if(whoSubmit === "address") {
 
-					weather_table.html(
+							chartElements.type = 'bar';
+							
+							chartElements.data.datasets.unshift({
 
-						`<table>
-							<tr>
-								<td>
-									Clouds
-								</td>
-								<td>
-									${ !result.list[0].clouds.all ? 0 : result.list[0].clouds.all }%
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Humidity
-								</td>
-								<td>
-									${ result.list[0].main.humidity }%
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Wind
-								</td>
-								<td>
-									Speed - ${ result.list[0].wind.speed }Km
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Pressure
-								</td>
-								<td>
-									${ result.list[0].main.pressure } hpa
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Max Temp
-								</td>
-								<td>
-									${ Math.round(result.list[0].main.temp_max - 273) } &#176C
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Min Temp
-								</td>
-								<td>
-									${ Math.round(result.list[0].main.temp_min - 273) } &#176C
-								</td>
-							</tr>
+								label: `Rainfall ${ cities }`,
+								fill: true,
+								backgroundColor: 'rgba(255, 100, 200, 0.4)',
+								borderColor: 'rgb(255, 100, 255)',
+								data: rainfalls
+										
+							});
 
-						</table>`
+							chartElements.data.datasets[1].type = 'line';
 
-					);					
+						}
 
-                },
-                
-                error: function () {
-  
-                    alert('Some error occurs!');
-  
-                }
+						const ctx = document.querySelector(`#${ myChart }`).getContext('2d');
 
-            });
-				
+						if(counter === valueLength) {
+
+	                		const mixedChart = new Chart(ctx, chartElements);
+
+						}
+						
+						$(`#${ weather_info }`).append(
+
+							`
+							<h3>Weather in ${result.city.name}, ${result.city.country}</h3>
+											
+							<p>
+								<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
+
+								${Math.round(result.list[0].main.temp - 273)} &#176C
+							</p>
+
+							<p>
+								${result.list[0].weather[0].description}
+							</p>
+							
+							<table>
+								<tr>
+									<td>
+										Clouds
+									</td>
+									<td>
+										${ !result.list[0].clouds.all ? 0 : result.list[0].clouds.all }%
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Humidity
+									</td>
+									<td>
+										${ result.list[0].main.humidity }%
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Wind
+									</td>
+									<td>
+										Speed - ${ result.list[0].wind.speed }Km
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Pressure
+									</td>
+									<td>
+										${ result.list[0].main.pressure } hpa
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Max Temp
+									</td>
+									<td>
+										${ Math.round(result.list[0].main.temp_max - 273) } &#176C
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Min Temp
+									</td>
+									<td>
+										${ Math.round(result.list[0].main.temp_min - 273) } &#176C
+									</td>
+								</tr>
+							</table>
+							`
+						);		
+
+						counter++;
+
+	                },
+	                error: function () {
+	  
+	                    alert('Some error occurs!');
+	  
+	                }
+
+            	});
+
+			});
+	
 		}
 
 
 
-
-
-		/*var mixedChart = whoSubmit === 'address' ?  new Chart(ctx, {
-
-						type: 'bar',
-						data: {
-
-							labels: times,
-							datasets: [
-
-								{
-
-									label: `Rainfall ${city}`,
-									fill: true,
-									backgroundColor: 'rgba(255, 100, 200, 0.4)',
-									borderColor: 'rgb(255, 100, 255)',
-									data: rainfalls
-									
-								},
-								{
-									label: `Temperature ${city}`,
-									fill: false,
-									ackgroundColor: 'rgba(255, 99, 132, 0.4)',
-									borderColor: 'rgb(255, 99, 132)',
-									data: temps,
-									type: 'line'
-
-								}
-							
-							]
-						
-						}
-
-					})
-
-					: 
-
-					new Chart(ctx, {
-
-						type: 'line',
-						data: {
-
-							labels: times,
-							datasets: [
-
-								{
-
-									label: `Temperature ${city}`,
-									fill: false,
-									backgroundColor: 'rgba(255, 99, 132, 0.4)',
-									borderColor: 'rgb(255, 150, 255)',
-									data: temps
-									
-								}
-								
-							]
-						
-						}
-
-					}); */
-
-
-
-
-
-
-
-
-
-
-
-		// $('#address').submit(function(e) {
-
-		// 		setWeather();
-		// 		e.preventDefault();
-
-		// });
-
 		$('#address').submit(function(e){
 
-			const inputInfo = [ $('#city')[0].value.split(' ') ];
+			const inputInfo = [];
+
+			if($('#city')[0].value) {
+
+				inputInfo.push([ $('#city')[0].value.split(', ') ]);
+
+			} 
 
 			const { nodeValue  } = e.target.attributes.id;
 
-			setWeather(nodeValue, inputInfo);
+			setWeather(nodeValue, inputInfo, inputInfo.length);
 			
 			e.preventDefault();
 
@@ -399,198 +254,20 @@
 
 				if($(`#city${i}`)[0].value) {
 
-					inputInfo.push($(`#city${i}`)[0].value.split(' '));
+					inputInfo.push($(`#city${i}`)[0].value.split(', '));
 
-				} else {
-
-					break;
 				}
 				
 			}
 
 			const { nodeValue  } = e.target.attributes.id;
 			
-			setWeather(nodeValue, inputInfo);
+			setWeather(nodeValue, inputInfo, inputInfo.length);
 			
 			e.preventDefault();
 
 		});
 
-
-/*
-
-		$('#address').submit(function(e) {
-    		
-			const address = $('#city')[0].value.split(' ');
-			const city = address[0].replace(',', '');
-			const country = address[address.length - 1];
-			const location = { city, country };
-
-			e.preventDefault();
-
-			//api.openweathermap.org/data/2.5/weather?q=London,uk
-			const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${ city },${ country }`;
-		 
-			$.ajax({
-
-                type: "POST",
-                url,
-                dataType: "json",
-                success: function (result) {
-                    
-                	//console.log(result);
-                	const temps = result.list.map(temp => temp.main.temp-273);
-					const times = result.list.map(time => time.dt_txt);                	
-					const rainfalls = result.list.map(rainfall => {						
-
-					//console.log('rainfall: ', rainfall);
-
-					let iSRain;
-
-						if(!rainfall.rain) {
-
-							iSRain = [];
-						
-						} else {
-
-
-							if(!rainfall.rain['3h']) {
-
-								rainfall.rain['3h'] = 0;
-								iSRain = rainfall.rain['3h']
-
-							} else {
-
-								iSRain = rainfall.rain['3h'];
-
-							}
-
-						} 
-
-						return iSRain;
-						
-					});
-
-					$('#city_province1').html(`Weather in ${result.city.name}, ${result.city.country}`);
-					
-					$('#weather_summary1').html(
-						`<p>
-
-							<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
-
-							${Math.round(result.list[0].main.temp - 273)} &#176C
-
-						</p>
-
-						<p>
-							${result.list[0].weather[0].description}
-						</p>
-						`
-					);
-
-					$('#weather_table1').html(
-
-						`<table>
-							<tr>
-								<td>
-									Clouds
-								</td>
-								<td>
-									${ !result.list[0].clouds.all ? 0 : result.list[0].clouds.all }%
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Humidity
-								</td>
-								<td>
-									${ result.list[0].main.humidity }%
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Wind
-								</td>
-								<td>
-									Speed - ${ result.list[0].wind.speed }Km
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Pressure
-								</td>
-								<td>
-									${ result.list[0].main.pressure } hpa
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Max Temp
-								</td>
-								<td>
-									${ Math.round(result.list[0].main.temp_max - 273) } &#176C
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Min Temp
-								</td>
-								<td>
-									${ Math.round(result.list[0].main.temp_min - 273) } &#176C
-								</td>
-							</tr>
-
-						</table>`
-
-					)
-
-                	const ctx = document.querySelector('#myChart1').getContext('2d');
-
-					var mixedChart = new Chart(ctx, {
-
-						type: 'bar',
-						data: {
-
-							labels: times,
-							datasets: [
-
-								{
-
-									label: `Rainfall ${city}`,
-									fill: true,
-									backgroundColor: 'rgba(255, 100, 200, 0.4)',
-									borderColor: 'rgb(255, 100, 255)',
-									data: rainfalls, // need to ba fixed
-									
-								},
-										{
-									label: `Temperature ${city}`,
-									fill: false,
-									ackgroundColor: 'rgba(255, 99, 132, 0.4)',
-									borderColor: 'rgb(255, 99, 132)',
-									data: temps,
-									type: 'line'
-
-								}
-							
-							]
-						
-						}
-
-					});
-
-                },
-                error: function () {
-  
-                    alert('Some error occurs!');
-  
-                }
-
-            });
-				
-
-		});	
-*/
 	});
 	
 </script>
@@ -617,12 +294,7 @@
 				<canvas id= "myChart1"></canvas>
 			</div>
 			
-			<div>
-				<h3 id="city_province1"></h3>
-				<p id="weather_summary1"></p>
-			</div>
-			
-			<div id="weather_table1">
+			<div id="weather_info1">				
 			</div>
 			
 			<div id="location1" style="margin-top: 25px; height: 50px"></div>
@@ -657,12 +329,7 @@
 				<canvas id="myChart2"></canvas>
 			</div>
 			
-			<div>
-				<h3 id="city_province2"></h3>
-				<p id="weather_summary2"></p>
-			</div>
-			
-			<div id="weather_table2">
+			<div id="weather_info2">
 			</div>
 			
 			<div id="location2" style="margin-top: 25px; height: 50px"></div>
