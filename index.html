@@ -6,269 +6,424 @@
 	<meta charset="UTF-8">
 	<title>Weather</title>
 
-	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkM0YeKZy0W3IuA1KNuCB77qjyRXdpKEk&callback=initMap&libraries=places" ></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>	 -->
+	
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkM0YeKZy0W3IuA1KNuCB77qjyRXdpKEk&libraries=places&callback=initMap" async defer></script>
 
-	<link rel="stylesheet"href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"/>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+	<link rel="stylesheet"href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"/>
 	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-
-	<script>
-
-	function initMap() {
-		
-		const autocomplete = new google.maps.places.Autocomplete($('#city')[0]);
-		const autocomplete1 = new google.maps.places.Autocomplete($('#city1')[0]);
-		const autocomplete2 = new google.maps.places.Autocomplete($('#city2')[0]);
-		const autocomplete3 = new google.maps.places.Autocomplete($('#city3')[0]);
-
-		google.maps.event.addListener(autocomplete, 'place_changed', ()=>{ console.log('working');});
-		google.maps.event.addListener(autocomplete1, 'place_changed', ()=>{ console.log('working');});
-		google.maps.event.addListener(autocomplete2, 'place_changed', ()=>{ console.log('working');});
-		google.maps.event.addListener(autocomplete3, 'place_changed', ()=>{ console.log('working');});
 	
-	}
+	<script>
 
 	$(document).ready(function() {
 
-		const setWeather = function (whoSubmit, submitValue, valueLength) {
+		
 
-			if(submitValue.length === 0) return alert('You must enter city.');
 
-			const myChart = whoSubmit === 'address' ? 'myChart1' : 'myChart2'; 
+ 	});
 
-			const weather_info = whoSubmit === 'address' ? 'weather_info1' : 'weather_info2';
+		
+		// let positions = [];
+		
+		// const autocomplete = new google.maps.places.Autocomplete($(`#city0`)[0]);
+		// // new google.maps.places.Autocomplete($(`#city1`)[0]);
+		// // new google.maps.places.Autocomplete($(`#city2`)[0]);
+		// // new google.maps.places.Autocomplete($(`#city3`)[0]);
 
-			const temperature = [];
+		// google.maps.event.addListener(autocomplete, 'place_changed', function() {
+    			
+  //   			// if($(`#city${i}`)[0].value) {
 
-			var counter = 1;
+  //   				const lat = autocomplete.getPlace().geometry.location.lat();
+		// 			const lng = autocomplete.getPlace().geometry.location.lng();
+		    	
+		// 			const position = { lat, lng };
+					
+		// 			positions.push(position);
 
-			if($('#weather_info1'))	$('#weather_info1').empty();
-			if($('#weather_info2'))	$('#weather_info2').empty();
+		// 			setWeather(positions);
 
-			submitValue.forEach(values => {
-
-				const cities = values[0]; //.replace(',', '');
-
-				const countries = values[values.length - 1];	
-
-				const url = `http://api.openweathermap.org/data/2.5/forecast?appid=275fe9c4fc4ff237910e57a69691877e&q=${ cities },${ countries }`;
-		 
-				$.ajax({
-
-	                type: "POST",
-	                url,
-	                dataType: "json",
-	                success: function (result) {
-
-	                	console.log(result)
-	                   
-	                	const temps = result.list.map(temp => temp.main.temp-273);
-
-						const times = result.list.map(time => time.dt_txt);                	
-
-						const rainfalls = result.list.map(rainfall => {						
-
-						let iSRain;
-
-							if(!rainfall.rain) {
-
-								iSRain = [];
-							
-							} else {
-
-								if(!rainfall.rain['3h']) {
-
-									rainfall.rain['3h'] = 0;
-									iSRain = rainfall.rain['3h']
-
-								} else {
-
-									iSRain = rainfall.rain['3h'];
-
-								}
-
-							} 
-
-							return iSRain;
-							
-						});
-
-						temperature.push({
-
-								label: `Temperature ${ cities }`,
-								fill: false,
-								backgroundColor: 'rgba(255, 99, 132, 0.4)',
-								borderColor: 'rgb(255, 150, 255)',
-								data: temps								
-
-						});
-
-						const chartElements = {
-
-							type: 'line',
-
-							data: {
-
-								labels: times,
-								datasets: temperature
-							
-							}
-
-						};
-
-						if(whoSubmit === "address") {
-
-							chartElements.type = 'bar';
-							
-							chartElements.data.datasets.unshift({
-
-								label: `Rainfall ${ cities }`,
-								fill: true,
-								backgroundColor: 'rgba(255, 100, 200, 0.4)',
-								borderColor: 'rgb(255, 100, 255)',
-								data: rainfalls
-										
-							});
-
-							chartElements.data.datasets[1].type = 'line';
-
-						}
-
-						const ctx = document.querySelector(`#${ myChart }`).getContext('2d');
-
-						if(counter === valueLength) {
-
-	                		const mixedChart = new Chart(ctx, chartElements);
-
-						}
-						
-						$(`#${ weather_info }`).append(
-
-							`
-							<h3>Weather in ${result.city.name}, ${result.city.country}</h3>
-											
-							<p>
-								<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
-
-								${Math.round(result.list[0].main.temp - 273)} &#176C
-							</p>
-
-							<p>
-								${result.list[0].weather[0].description}
-							</p>
-							
-							<table>
-								<tr>
-									<td>
-										Clouds
-									</td>
-									<td>
-										${ !result.list[0].clouds.all ? 0 : result.list[0].clouds.all }%
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Humidity
-									</td>
-									<td>
-										${ result.list[0].main.humidity }%
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Wind
-									</td>
-									<td>
-										Speed - ${ result.list[0].wind.speed }Km
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Pressure
-									</td>
-									<td>
-										${ result.list[0].main.pressure } hpa
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Max Temp
-									</td>
-									<td>
-										${ Math.round(result.list[0].main.temp_max - 273) } &#176C
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Min Temp
-									</td>
-									<td>
-										${ Math.round(result.list[0].main.temp_min - 273) } &#176C
-									</td>
-								</tr>
-							</table>
-							`
-						);		
-
-						counter++;
-
-	                },
-	                error: function () {
-	  
-	                    alert('Some error occurs!');
-	  
-	                }
-
-            	});
-
-			});
+		// 			positions = [];
 	
-		}
+  //   			// }
+				
+		// });
+
+
+		// let positions = [];
+		
+		// for(let i = 0 ; i < 4 ; i++) {
+
+		// 	const autocomplete = new google.maps.places.Autocomplete($(`#city${i}`)[0]);
+
+		// 	google.maps.event.addListener(autocomplete, 'place_changed', function() {
+    			
+  //   			if($(`#city${i}`)[0].value) {
+
+  //   				const lat = autocomplete.getPlace().geometry.location.lat();
+		// 			const lng = autocomplete.getPlace().geometry.location.lng();
+		    	
+		// 			const position = { lat, lng };
+					
+		// 			positions.push(position);
+
+		// 			setWeather(positions);
+
+		// 			//if(i === 0) positions = [];
+	
+  //   			}
+				
+		// 	});
+
+		// }   
+	function initMap() { 
+
+
+		// console.log('working')
+
+	 var city = document.getElementById('city0');
+	  var autocomplete = new google.maps.places.Autocomplete(city);
+	  
+	  google.maps.event.addListener(autocomplete, 'place_changed', function() {
+	  	var lat = autocomplete.getPlace().geometry.location.lat();
+	  	var long = autocomplete.getPlace().geometry.location.lng();
+	  	
+	  });
+
+	// 	const autocomplete = new google.maps.places.Autocomplete($(`#city0`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city1`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city2`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city3`)[0]);
+
+	// 	google.maps.event.addListener(autocomplete, 'place_changed', function() {
+    			
+	// 		// if($(`#city${i}`)[0].value) {
+
+	// 			const lat = autocomplete.getPlace().geometry.location.lat();
+	// 			const lng = autocomplete.getPlace().geometry.location.lng();
+	    	
+	// 			const position = { lat, lng };
 
 
 
+	// 		});
+
+	}
+
+
+
+
+
+	// function setWeather() {
+
+
+
+	// //let positions = [];
+	
+	// 	const autocomplete = new google.maps.places.Autocomplete($(`#city0`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city1`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city2`)[0]);
+	// // new google.maps.places.Autocomplete($(`#city3`)[0]);
+
+	// 	google.maps.event.addListener(autocomplete, 'place_changed', function() {
+    			
+	// 		// if($(`#city${i}`)[0].value) {
+
+	// 			const lat = autocomplete.getPlace().geometry.location.lat();
+	// 			const lng = autocomplete.getPlace().geometry.location.lng();
+	    	
+	// 			const position = { lat, lng };
+
+	// 			const url = `http://api.openweathermap.org/data/2.5/forecast?lat=${ lat }&lon=${ lng }&appid=275fe9c4fc4ff237910e57a69691877e`;
+			
+	// 		$.ajax({
+
+ //                type: "POST",
+ //                url,
+ //                dataType: "json",
+ //                success: function (result) {
+
+ //                	if (result) console.log(result);
+				
+	// 			// positions.push(position);
+
+	// 			// setWeather(position);
+
+	// 			// positions = [];
+
+	// 			}
+			
+	// 		});
+
+	// 		});
+	// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			// console.log(positions);
+
+		// 	if($('#weather_info1'))	$('#weather_info1').empty();
+		// 	if($('#weather_info2'))	$('#weather_info2').empty();
+			
+		// 	if(positions.length === 0) return alert('You must enter city.');
+
+		// 	const myChart = positions.length === 1 ? 'myChart1' : 'myChart2'; 
+
+		// 	const weather_info = positions.length === 1 ? 'weather_info1' : 'weather_info2';
+
+		// 	let counter = 1;
+
+		// 	positions.forEach(function (position) {
+	
+		// 		const { lat, lng } = position;
+			
+		// 		const url = `http://api.openweathermap.org/data/2.5/forecast?lat=${ lat }&lon=${ lng }&appid=275fe9c4fc4ff237910e57a69691877e`;
+				
+		// 		$.ajax({
+
+	 //                type: "POST",
+	 //                url,
+	 //                dataType: "json",
+	 //                success: function (result) {
+
+	 //                	console.log(result);
+
+	 //                	const cities = result.city.name;
+
+	 //                	const countries = result.city.country; 
+
+	 //                	const temps = result.list.map(temp => temp.main.temp-273);
+
+		// 				const times = result.list.map(time => time.dt_txt); 
+
+		// 				const temperature = [];               	
+
+		// 				const rainfalls = result.list.map(rainfall => {						
+
+		// 				let iSRain;
+
+		// 					if(!rainfall.rain) {
+
+		// 						iSRain = [];
+							
+		// 					} else {
+
+		// 						if(!rainfall.rain['3h']) {
+
+		// 							rainfall.rain['3h'] = 0;
+		// 							iSRain = rainfall.rain['3h']
+
+		// 						} else {
+
+		// 							iSRain = rainfall.rain['3h'];
+
+		// 						}
+
+		// 					} 
+
+		// 					return iSRain;
+							
+		// 				});
+
+		// 				temperature.push({
+
+		// 						label: `Temperature ${ cities }`,
+		// 						fill: false,
+		// 						backgroundColor: 'rgba(255, 99, 132, 0.4)',
+		// 						borderColor: 'rgb(255, 150, 255)',
+		// 						data: temps								
+
+		// 				});
+
+		// 				const chartElements = {
+
+		// 					type: 'line',
+
+		// 					data: {
+
+		// 						labels: times,
+		// 						datasets: temperature
+							
+		// 					}
+
+		// 				};
+
+		// 				if(positions.length === 1) {
+
+		// 					chartElements.type = 'bar';
+							
+		// 					chartElements.data.datasets.unshift({
+
+		// 						label: `Rainfall ${ cities }`,
+		// 						fill: true,
+		// 						backgroundColor: 'rgba(255, 100, 200, 0.4)',
+		// 						borderColor: 'rgb(255, 100, 255)',
+		// 						data: rainfalls
+										
+		// 					});
+
+		// 					chartElements.data.datasets[1].type = 'line';
+
+		// 				 }
+
+		// 				const ctx = document.querySelector(`#${ myChart }`).getContext('2d');
+
+		// 				if(counter === positions.length) {
+
+	 //                		const mixedChart = new Chart(ctx, chartElements);
+
+		// 				}
+						
+		// 				$(`#${ weather_info }`).append(
+
+		// 					`
+		// 					<h3>Weather in ${result.city.name}, ${result.city.country}</h3>
+											
+		// 					<p>
+		// 						<img src="http://openweathermap.org/img/w/${result.list[0].weather[0].icon}.png" alt="${result.list[0].weather[0].icon}">
+
+		// 						${Math.round(result.list[0].main.temp - 273)} &#176C
+		// 					</p>
+
+		// 					<p>
+		// 						${result.list[0].weather[0].description}
+		// 					</p>
+							
+		// 					<table>
+		// 						<tr>
+		// 							<td>
+		// 								Clouds
+		// 							</td>
+		// 							<td>
+		// 								${ !result.list[0].clouds.all ? 0 : result.list[0].clouds.all }%
+		// 							</td>
+		// 						</tr>
+		// 						<tr>
+		// 							<td>
+		// 								Humidity
+		// 							</td>
+		// 							<td>
+		// 								${ result.list[0].main.humidity }%
+		// 							</td>
+		// 						</tr>
+		// 						<tr>
+		// 							<td>
+		// 								Wind
+		// 							</td>
+		// 							<td>
+		// 								Speed - ${ result.list[0].wind.speed }Km
+		// 							</td>
+		// 						</tr>
+		// 						<tr>
+		// 							<td>
+		// 								Pressure
+		// 							</td>
+		// 							<td>
+		// 								${ result.list[0].main.pressure } hpa
+		// 							</td>
+		// 						</tr>
+		// 						<tr>
+		// 							<td>
+		// 								Max Temp
+		// 							</td>
+		// 							<td>
+		// 								${ Math.round(result.list[0].main.temp_max - 273) } &#176C
+		// 							</td>
+		// 						</tr>
+		// 						<tr>
+		// 							<td>
+		// 								Min Temp
+		// 							</td>
+		// 							<td>
+		// 								${ Math.round(result.list[0].main.temp_min - 273) } &#176C
+		// 							</td>
+		// 						</tr>
+		// 					</table>
+		// 					`
+		// 				);
+	                   
+		// 			}
+				
+		// 		});
+
+		// 	});
+
+		// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// let positions = [];
+		
+
+		
+
+	
+
+		//console.log(positions)
+
+
+	
 		$('#address').submit(function(e){
 
-			const inputInfo = [];
+			//console.log(positions)
 
-			if($('#city')[0].value) {
+		  	//setWeather();
 
-				inputInfo.push([ $('#city')[0].value.split(', ') ]);
 
-			} 
 
-			const { nodeValue  } = e.target.attributes.id;
-
-			setWeather(nodeValue, inputInfo, inputInfo.length);
 			
-			e.preventDefault();
+					//if(i === 0) positions = [];
+					//return positions;				
+    			
+			//console.log(kkkd())
+
+
+			
+			
+		//e.preventDefault();
+			// positions = [];
+
+
+		  	//positions = [];
 
 		});
 
 		$('#triple-addresses').submit(function(e) {
 
-			const inputInfo = [];
-
-			for(var i = 1; i < 4 ; i++) {
-
-				if($(`#city${i}`)[0].value) {
-
-					inputInfo.push($(`#city${i}`)[0].value.split(', '));
-
-				}
-				
-			}
-
-			const { nodeValue  } = e.target.attributes.id;
-			
-			setWeather(nodeValue, inputInfo, inputInfo.length);
-			
-			e.preventDefault();
-
+			// e.preventDefault();
+		//	positions = [];
 		});
 
-	});
+	// });
 	
 </script>
 
@@ -286,8 +441,8 @@
 	    <div data-role="content">
 
 			<form id="address">
-				<input type="text" name="city" id="city" autofocus>
-				<input type="submit" name="submit" value="submit"> 
+				<input type="text" id="city0" autofocus>
+				<input type="submit" name="submit" value="Get Weather"> 
 			</form>
 
 			<div style="width:75%;">
@@ -322,7 +477,7 @@
 				<input type="text" name="city1" id="city1">
 				<input type="text" name="city2" id="city2">
 				<input type="text" name="city3" id="city3">
-				<input type="submit" name="submit" value="submit"> 
+				<input type="submit" name="submit" value="Get Weather"> 
 			</form>
 
 			<div style="width:75%;">
